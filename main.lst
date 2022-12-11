@@ -1,0 +1,605 @@
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001         list p=16f628a          ;define o tipo de uC usado
+                      00002         #include <p16f628.inc>  ;inclui declarações típicas
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ;  MPASM PIC16F628 processor include
+                      00005 ; 
+                      00006 ;  (c) Copyright 1999-2013 Microchip Technology, All rights reserved
+                      00007 ;==========================================================================
+                      00008 
+Message[301]: MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+                      00381         LIST
+                      00003         ;diretiva para definir a palavra de configuração
+2007   3F22           00004         __CONFIG _HS_OSC&_WDT_OFF&_PWRTE_ON&_BODEN_OFF&_LVP_OFF
+                      00005 
+                      00006 ;DEFINIÇÃO DAS PORTAS A SEREM USADAS=============================================================
+                      00007 #define Ac1 PORTB, RB0
+                      00008 #define Ac2 PORTB, RB1
+                      00009 #define Ac3 PORTB, RB2
+                      00010 #define Ac4 PORTB, RB3
+                      00011 #define Ac5 PORTB, RB4
+                      00012 #define Ac6 PORTB, RB5
+                      00013 ;=================================================================================================
+0000                  00014         ORG     0X00
+                      00015 ;Definição do endereço inicial do programa
+0004                  00016         ORG 0X04
+                      00017         
+0004                  00018 setup: 
+0004   1683           00019         bsf             STATUS, RP0     ;Entra no banco1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0005   0186           00020         clrf    TRISB           ;Coloca porta b como saida
+0006   1283           00021         bcf             STATUS, RP0     ;Sai do banco1
+                      00022         cblock 0X20
+  00000020            00023                 contador1, contador2, contador3
+                      00024         endc
+                      00025 ;Ideia inicial Chaveamento
+                      00026 ;
+                      00027 ;Inicio
+                      00028 ;       defina todas as portas em nível baixo
+                      00029 ;       
+                      00030 ;       1°COMUTACAO========================================================================
+                      00031 ;       No tempo t=0
+                      00032 ;       Ac5 <- high
+                      00033 ;       Ac6 <- low              Nesse caso seria a onda defasada em -120°, ja viria com nivel alto de t=
+                            -infinito
+                      00034 ;       
+                      00035 ;               
+                      00036 ;       Ac1 <- high             inicio da onda com defasagem zero (Va)
+                      00037 ;       Ac2 <- low
+                      00038 ;       
+                      00039 ;       2°COMUTACAO========================================================================
+                      00040 ;
+                      00041 ;       Espere T/3              -seria 1/3 do periodo do duty cycle
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00042 ;
+                      00043 ;       Ac5 <- low
+                      00044 ;       Ac6 <- hig
+                      00045 ;
+                      00046 ;       3°COMUTACAO========================================================================
+                      00047 ;       Espere T/3              -seria 1/3 do periodo do duty cycle
+                      00048 ;
+                      00049 ;       Ac3 <- high
+                      00050 ;       Ac4 <- low
+                      00051 ;       
+                      00052 ;       4°COMUTACAO========================================================================
+                      00053 ;       Espere T/3              -seria 1/3 do periodo do duty cycle
+                      00054 ;
+                      00055 ;       Ac1 <- low
+                      00056 ;       Ac2 <- high
+                      00057 ;       
+                      00058 ;       5°COMUTACAO========================================================================
+                      00059 ;       Espere T/3              -seria 1/3 do periodo do duty cycle
+                      00060 ;       
+                      00061 ;       Ac5 <- high
+                      00062 ;       Ac6 <- low      
+                      00063 ;       
+                      00064 ;       6°COMUTACAO========================================================================
+                      00065 ;       Espere T/3              -seria 1/3 do periodo do duty cycle
+                      00066 ;       
+                      00067 ;       Ac3 <- low
+                      00068 ;       Ac4 <- high     
+                      00069 ;       
+                      00070 ;       7°COMUTACAO========================================================================
+                      00071 ;       Espere T/3              -seria 1/3 do periodo do duty cycle
+                      00072 ;       
+                      00073 ;       Ac1 <- high             inicio da onda com defasagem zero (Va)
+                      00074 ;       Ac2 <- low
+                      00075 ;       
+                      00076 ;       FIM DO CICLO    
+                      00077 ;
+                      00078 
+0007                  00079 main:
+                      00080         ;Vindo de t = - infinito......
+0007   204A           00081         call aciona_VG3
+0008   2034           00082         call aciona_VG1
+                      00083         
+                      00084         ;call delay_333us
+0009   2083           00085         call    delay_5ms
+                      00086         ;call delay_um_terco_de_T               ;Considerar T = duty_cycle
+000A   0000           00087         nop
+000B   0000           00088         nop
+000C   0000           00089         nop
+000D   206B           00090         call desaciona_VG3
+                      00091         
+                      00092         ;call delay_um_terco_de_T
+                      00093         ;call delay_333us
+000E   2083           00094         call    delay_5ms
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000F   0000           00095         nop
+0010   0000           00096         nop
+0011   0000           00097         nop
+0012   203F           00098         call aciona_VG2
+0013   0000           00099         nop
+0014   0000           00100         nop
+0015   0000           00101         nop
+                      00102         ;call delay_um_terco_de_T
+                      00103         ;call delay_333us
+0016   2083           00104         call    delay_5ms
+0017   0000           00105         nop
+0018   0000           00106         nop
+0019   0000           00107         nop
+001A   2055           00108         call desaciona_VG1
+001B   0000           00109         nop
+001C   0000           00110         nop
+001D   0000           00111         nop
+                      00112         ;call delay_um_terco_de_T
+                      00113         ;call delay_333us
+001E   2083           00114         call    delay_5ms
+001F   0000           00115         nop
+0020   0000           00116         nop
+0021   0000           00117         nop
+0022   204A           00118         call aciona_VG3 
+0023   0000           00119         nop
+0024   0000           00120         nop
+0025   0000           00121         nop
+                      00122         ;call delay_um_terco_de_T
+                      00123         ;call delay_333us
+0026   2083           00124         call    delay_5ms
+0027   0000           00125         nop
+0028   0000           00126         nop
+0029   0000           00127         nop
+002A   2060           00128         call desaciona_VG2
+002B   0000           00129         nop
+002C   0000           00130         nop
+002D   0000           00131         nop
+                      00132         ;call delay_um_terco_de_T
+                      00133         ;call delay_333us
+002E   2083           00134         call    delay_5ms
+002F   0000           00135         nop
+0030   0000           00136         nop
+0031   0000           00137         nop
+0032   2034           00138         call aciona_VG1
+0033   2809           00139         goto main + .2
+                      00140 
+                      00141 ;======Funções para acionamento das portas 
+                      00142 
+0034                  00143 aciona_VG1:     
+0034   1406           00144         bsf             Ac1
+0035   0000           00145         nop
+0036   0000           00146         nop
+0037   0000           00147         nop
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0038   0000           00148         nop
+0039   1086           00149         bcf             Ac2
+003A   0000           00150         nop
+003B   0000           00151         nop
+003C   0000           00152         nop
+003D   0000           00153         nop
+003E   0008           00154         return
+                      00155 
+003F                  00156 aciona_VG2:     
+003F   1506           00157         bsf             Ac3
+0040   0000           00158         nop
+0041   0000           00159         nop
+0042   0000           00160         nop
+0043   0000           00161         nop
+0044   1186           00162         bcf             Ac4
+0045   0000           00163         nop
+0046   0000           00164         nop
+0047   0000           00165         nop
+0048   0000           00166         nop
+0049   0008           00167         return
+                      00168 
+004A                  00169 aciona_VG3:     
+004A   1606           00170         bsf             Ac5
+004B   0000           00171         nop
+004C   0000           00172         nop
+004D   0000           00173         nop
+004E   0000           00174         nop     
+004F   1286           00175         bcf             Ac6
+0050   0000           00176         nop
+0051   0000           00177         nop
+0052   0000           00178         nop
+0053   0000           00179         nop     
+0054   0008           00180         return
+                      00181 
+0055                  00182 desaciona_VG1:  
+0055   1006           00183         bcf             Ac1
+0056   0000           00184         nop
+0057   0000           00185         nop
+0058   0000           00186         nop
+0059   0000           00187         nop     
+005A   1486           00188         bsf             Ac2
+005B   0000           00189         nop
+005C   0000           00190         nop
+005D   0000           00191         nop
+005E   0000           00192         nop
+005F   0008           00193         return
+                      00194 
+0060                  00195 desaciona_VG2:  
+0060   1106           00196         bcf             Ac3
+0061   0000           00197         nop
+0062   0000           00198         nop
+0063   0000           00199         nop
+0064   0000           00200         nop
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0065   1586           00201         bsf             Ac4
+0066   0000           00202         nop
+0067   0000           00203         nop
+0068   0000           00204         nop
+0069   0000           00205         nop
+006A   0008           00206         return
+                      00207 
+006B                  00208 desaciona_VG3:  
+006B   1206           00209         bcf             Ac5
+006C   0000           00210         nop
+006D   0000           00211         nop
+006E   0000           00212         nop
+006F   0000           00213         nop
+0070   1686           00214         bsf             Ac6
+0071   0000           00215         nop
+0072   0000           00216         nop
+0073   0000           00217         nop
+0074   0000           00218         nop
+0075   0008           00219         return
+                      00220 
+                      00221 
+                      00222 
+                      00223 
+0076                  00224 delay_333ms:
+0076   30D7           00225         MOVLW 0Xd7
+0077   00A0           00226         MOVWF contador1
+0078   30C2           00227         MOVLW 0Xc2
+0079   00A1           00228         MOVWF contador2
+007A   3007           00229         MOVLW 0X07
+007B   00A2           00230         MOVWF contador3
+007C                  00231 LOOP
+007C   0BA0           00232         DECFSZ contador1,1
+007D   287C           00233         GOTO LOOP
+007E   0BA1           00234         DECFSZ contador2,1
+007F   287C           00235         GOTO LOOP
+0080   0BA2           00236         DECFSZ contador3, 1
+0081   287C           00237         GOTO LOOP
+0082   0008           00238         RETURN
+                      00239 
+0083                  00240 delay_5ms:
+0083   30F7           00241         MOVLW 0Xf7
+0084   00A0           00242         MOVWF contador1
+0085   301A           00243         MOVLW 0X1a
+0086   00A1           00244         MOVWF contador2
+0087                  00245 LOOP1
+0087   0BA0           00246         DECFSZ contador1, 1
+0088   2887           00247         GOTO LOOP1
+0089   0BA1           00248         DECFSZ contador2, 1
+008A   2887           00249         GOTO LOOP1
+008B   0000           00250         NOP
+008C   0000           00251         NOP
+008D   0008           00252         RETURN
+                      00253 
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+008E                  00254 delay_333us:
+008E   30B8           00255         MOVLW 0Xb8
+008F   00A0           00256         MOVWF contador1
+0090   3002           00257         MOVLW 0X02
+0091   00A1           00258         MOVWF contador2
+0092                  00259 LOOP2
+0092   0BA0           00260         DECFSZ contador1, 1
+0093   2892           00261         GOTO LOOP2
+0094   0BA1           00262         DECFSZ contador2, 1
+0095   2892           00263         GOTO LOOP2
+0096   0000           00264         NOP
+0097   0000           00265         NOP
+0098   0008           00266         RETURN
+                      00267 
+                      00268         END                                     ; FIM DE PROGRAMA
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  7
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADDEN                             00000003
+ADEN                              00000003
+Ac1                               PORTB, RB0
+Ac2                               PORTB, RB1
+Ac3                               PORTB, RB2
+Ac4                               PORTB, RB3
+Ac5                               PORTB, RB4
+Ac6                               PORTB, RB5
+BRGH                              00000002
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CIS                               00000003
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000001F
+CMIE                              00000006
+CMIF                              00000006
+CREN                              00000004
+CSRC                              00000007
+DATA_CP_OFF                       00003FFF
+DATA_CP_ON                        00003EFF
+DC                                00000001
+EEADR                             0000009B
+EECON1                            0000009C
+EECON2                            0000009D
+EEDATA                            0000009A
+EEIE                              00000007
+EEIF                              00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GIE                               00000007
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+IRP                               00000007
+LOOP                              0000007C
+LOOP1                             00000087
+LOOP2                             00000092
+NOT_BO                            00000000
+NOT_BOD                           00000000
+NOT_BOR                           00000000
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+OERR                              00000001
+OPTION_REG                        00000081
+OSCF                              00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PIE1                              0000008C
+PIR1                              0000000C
+PORTA                             00000005
+PORTB                             00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RP0                               00000005
+RP1                               00000006
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RX9                               00000006
+RX9D                              00000000
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+STATUS                            00000003
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1OSCEN                           00000003
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TRISB7                            00000007
+TRMT                              00000001
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             0000009F
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+W                                 00000000
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_BOREN_OFF                        00003FBF
+_BOREN_ON                         00003FFF
+_CONFIG                           00002007
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_50                            00002BFF
+_CP_75                            000017FF
+_CP_ALL                           000003FF
+_CP_OFF                           00003FFF
+_DEVID1                           00002006
+_ER_OSC_CLKOUT                    00003FFF
+_ER_OSC_NOCLKOUT                  00003FFE
+_EXTCLK_OSC                       00003FEF
+_FOSC_ECIO                        00003FEF
+_FOSC_ERCLK                       00003FFF
+_FOSC_ERIO                        00003FFE
+_FOSC_HS                          00003FEE
+_FOSC_INTOSCCLK                   00003FFD
+_FOSC_INTOSCIO                    00003FFC
+_FOSC_LP                          00003FEC
+_FOSC_XT                          00003FED
+_HS_OSC                           00003FEE
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FEC
+MPASM  5.51                          MAIN.ASM   11-27-2022  0:40:32         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_WDTE_OFF                         00003FFB
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FED
+__16F628A                         00000001
+__DEBUG                           1
+aciona_VG1                        00000034
+aciona_VG2                        0000003F
+aciona_VG3                        0000004A
+contador1                         00000020
+contador2                         00000021
+contador3                         00000022
+delay_333ms                       00000076
+delay_333us                       0000008E
+delay_5ms                         00000083
+desaciona_VG1                     00000055
+desaciona_VG2                     00000060
+desaciona_VG3                     0000006B
+main                              00000007
+setup                             00000004
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : ----XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXX------- ---------------- ----------------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   149
+Program Memory Words Free:  1899
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     2 reported,     0 suppressed
+
+
